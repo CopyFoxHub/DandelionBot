@@ -1,7 +1,7 @@
 import openai  # Доступ к ИИ
 from aiogram import types  # Типы сообщений
 from aiogram.filters import CommandObject  # Аргументы
-from openai.error import RateLimitError  # Ошибка при спаме
+from openai.error import RateLimitError, InvalidRequestError  # Ошибка при спаме
 from aiogram.utils.keyboard import InlineKeyboardBuilder  # Создание кнопок
 from DandelionBot.Bot.Resources import chatgpt_phrase, chatgpt_content  # Всё для ChatGPT
 
@@ -40,14 +40,14 @@ async def change_content(message: types.Message, command: CommandObject) -> None
     if command.args:
         if command.args == "reset":
             chatgpt_content[0] = chatgpt_content[1]
-            await message.answer(text="Настройки сброшены до заводских настроек")
+            await message.answer(text="Настройки сброшены до заводских")
         else:
             chatgpt_content[0] = command.args
-            await message.answer(text=f"Новые настройки бота: {command.args}")
+            await message.answer(text=f"Новые настройки бота: {command.args}\n\nВведите /set_content reset для сброса")
 
     # При его отсутствие
     else:
-        await message.answer(text=f"После команды необходимо ввести текст настроек\nТекущие настройки:{chatgpt_content[0]}")
+        await message.answer(text=f"Отсутствует текст для настроек ChatGPT\n\nТекущие настройки:\n{chatgpt_content[0]}")
 
 
 async def generate_text(message_history) -> str:
@@ -67,3 +67,5 @@ async def generate_text(message_history) -> str:
     # При спаме
     except RateLimitError:
         return "Слишком большое количество запросов, попробуйте написать ещё раз через 20 секунд."
+    except InvalidRequestError:
+        return "Ваше предложение (или настройки бота) слишком большие. Попробуйте их/его изменить."
